@@ -16,7 +16,7 @@ def get_GloVe():
 
 def process_tweet(text, w2v_model):
     vecs = np.array([w2v_model[word] for word in text.split() if word in w2v_model])
-    return np.mean(vecs, axis=1)
+    return np.mean(vecs, axis=0)
 
 
 def preprocess_data(df, w2v_model):

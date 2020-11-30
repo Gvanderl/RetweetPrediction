@@ -9,6 +9,7 @@ tensorflow-gpu = "*"
 pandas = "*"
 verstack = "*"
 gensim = "*"
+numpy = "*"
 
 [dev-packages]
 

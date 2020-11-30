@@ -5,6 +5,7 @@ import os
 import re
 import string as st
 import numpy as np
+from verstack.stratified_continuous_split import scsplit
 
 
 def get_GloVe():
@@ -20,9 +21,9 @@ def process_tweet(text, w2v_model):
 
 
 def preprocess_data(df, w2v_model):
-    x = df["text"].apply(clean)
-    x = x.replace('', np.nan).dropna()
-    x = x.apply(lambda x: process_tweet(x, w2v_model))
+    df["text"] = df["text"].apply(clean)
+    df = df.replace('', np.nan).dropna(subset=["text"]).reset_index()
+    x = df["text"].apply(lambda x: process_tweet(x, w2v_model))
     y = df["retweet_count"]
     return x, y
 
@@ -59,10 +60,11 @@ def get_data():
     print("Processing data ...")
     x, y = preprocess_data(train_df, glove_model)
     print("Done")
-    return x, y
+    return scsplit(x, y, stratify=y, train_size=0.7, test_size=0.3)
 
 
 if __name__ == '__main__':
-    x, y = get_data()
-    print(f"X = {x}")
-    print(f"Y = {y}")
+    X_train, X_test, y_train, y_test = get_data()
+    np.savez(data_folder / "glove_prepro", X_train=X_train, X_test=X_test, y_train=y_train, y_test=y_test)
+    print(f"X_train = {X_train}")
+    print(f"y_train = {y_train}")

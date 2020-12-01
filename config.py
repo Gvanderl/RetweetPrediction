@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# TODO weights and biases
 
 # Folders and file paths
 data_folder = Path(__file__).parent.resolve() / "data/"

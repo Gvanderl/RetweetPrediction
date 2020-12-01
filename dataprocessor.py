@@ -12,8 +12,10 @@ class DataProcessor:
     def __init__(self):
         self.df = None
         self.w2v_model = None
+        self.label_col = "retweet_count"
+        self.label_max = None
 
-    def get_GloVe_model(self):
+    def get_glove_model(self):
         if not glove_path.exists():
             os.system(f"wget https://s3.amazonaws.com/dl4j-distribution/GoogleNews-vectors-negative300.bin.gz "
                       f"--directory-prefix={data_folder}")
@@ -51,15 +53,16 @@ class DataProcessor:
         return text
 
     def norm_label(self):
-        self.df["retweet_count"] = self.df["retweet_count"] / max(self.df["retweet_count"])
+        self.label_max = max(self.df[self.label_col])
+        self.df[self.label_col] = self.df[self.label_col] / self.label_max
 
     def get_split_df(self):
-        return scsplit(self.df["text"], self.df["retweet_count"], stratify=self.df["retweet_count"], train_size=0.7,
+        return scsplit(self.df["text"], self.df[self.label_col], stratify=self.df[self.label_col], train_size=0.7,
                        test_size=0.3)
 
     def apply_glove(self):
         print("Loading Glove ...")
-        self.get_GloVe_model()
+        self.get_glove_model()
         print("Done")
         print("Processing data ...")
         self.load_csv(train_path)
@@ -73,8 +76,8 @@ class DataProcessor:
         self.df.to_hdf(path, key='df', mode='w')
         print(f"Dataframe saved to {path}")
 
-    def load_csv(self, path):
-        self.df = pd.read_csv(path, nrows=None)
+    def load_csv(self, path, nrows=None):
+        self.df = pd.read_csv(path, nrows=nrows)
 
 
 if __name__ == '__main__':

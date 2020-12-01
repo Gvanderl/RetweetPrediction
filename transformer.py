@@ -10,7 +10,7 @@ transformers_logger = logging.getLogger("transformers")
 transformers_logger.setLevel(logging.WARNING)
 
 dp = DataProcessor()
-dp.load_csv(train_path)
+dp.load_csv(train_path, 10000)
 dp.clean_df()
 dp.norm_label()
 
@@ -40,4 +40,4 @@ model.train_model(train_df)
 result, model_outputs, wrong_predictions = model.eval_model(eval_df)
 
 # Make predictions with the model
-predictions, raw_outputs = model.predict(["Sam was a Wizard"])
+# predictions, raw_outputs = model.predict(["Sam was a Wizard"])

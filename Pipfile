@@ -13,6 +13,7 @@ numpy = "*"
 torch = "*"
 simpletransformers = "*"
 pandarallel = "*"
+tables = "*"
 
 [dev-packages]
 

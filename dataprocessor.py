@@ -10,7 +10,7 @@ from verstack.stratified_continuous_split import scsplit
 
 class DataProcessor:
     def __init__(self):
-        self.df = pd.read_csv(train_path, index_col=0)
+        self.df = None
         self.w2v_model = None
 
     def get_GloVe_model(self):
@@ -62,21 +62,25 @@ class DataProcessor:
         self.get_GloVe_model()
         print("Done")
         print("Processing data ...")
+        self.load_csv(train_path)
         self.clean_df()
         self.norm_label()
         self.df = self.df.replace('', np.nan).dropna(subset=["text"]).reset_index(drop=True)
         self.df["text"] = self.df["text"].apply(self.tweet_w2v)
         print("Done")
 
-    def save_df(self, name):
-        self.df.to_csv(data_folder / name)
-        print(f"Dataframe saved to {data_folder / name}")
+    def save_df(self, path):
+        self.df.to_hdf(path, key='df', mode='w')
+        print(f"Dataframe saved to {path}")
+
+    def load_csv(self, path):
+        self.df = pd.read_csv(path, nrows=None)
 
 
 if __name__ == '__main__':
     data_processor = DataProcessor()
     data_processor.apply_glove()
-    data_processor.save_df("glove_prepro")
+    data_processor.save_df(data_folder / "glove_prepro.h5")
     X_train, X_test, y_train, y_test = data_processor.get_split_df()
     print(f"X_train = {X_train}")
     print(f"y_train = {y_train}")

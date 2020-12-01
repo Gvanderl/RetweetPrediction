@@ -1,14 +1,21 @@
 from simpletransformers.classification import ClassificationModel, ClassificationArgs
 import pandas as pd
 import logging
-from dataprocessor import get_clean_df, split_df, norm_label
+from dataprocessor import DataProcessor
+from config import *
 
 
 logging.basicConfig(level=logging.INFO)
 transformers_logger = logging.getLogger("transformers")
 transformers_logger.setLevel(logging.WARNING)
 
-X_train, X_test, y_train, y_test = split_df(norm_label(get_clean_df()))
+dp = DataProcessor()
+dp.load_csv(train_path)
+dp.clean_df()
+dp.norm_label()
+
+X_train, X_test, y_train, y_test = dp.get_split_df()
+
 train_df = pd.DataFrame({"text": X_train, "labels": y_train})
 eval_df = pd.DataFrame({"text": X_test, "labels": y_test})
 

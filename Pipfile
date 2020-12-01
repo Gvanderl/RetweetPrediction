@@ -10,6 +10,9 @@ pandas = "*"
 verstack = "*"
 gensim = "*"
 numpy = "*"
+torch = "*"
+simpletransformers = "*"
+pandarallel = "*"
 
 [dev-packages]
 

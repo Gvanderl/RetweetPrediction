@@ -12,4 +12,5 @@ train_path = data_folder / "train.csv"
 assert train_path.exists(), "You need to download the train set from Kaggle"
 glove_path = data_folder / "GoogleNews-vectors-negative300.bin.gz"
 
-
+model_folder = Path(__file__).parent.resolve() / "models/"
+model_folder.mkdir(parents=True, exist_ok=True)

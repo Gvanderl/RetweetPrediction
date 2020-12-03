@@ -60,14 +60,18 @@ class DataProcessor:
         return scsplit(self.df["text"], self.df[self.label_col], stratify=self.df[self.label_col], train_size=0.7,
                        test_size=0.3)
 
-    def apply_glove(self):
+    def get_split_df_with_all_cols(self):
+        return scsplit(self.df, self.df[self.label_col], stratify=self.df[self.label_col], train_size=0.7,
+                       test_size=0.3)
+
+    def apply_glove(self, normalize=True, nrows=None):
         print("Loading Glove ...")
         self.get_glove_model()
         print("Done")
         print("Processing data ...")
-        self.load_csv(train_path)
+        self.load_csv(train_path, nrows)
         self.clean_df()
-        self.norm_label()
+        if normalize: self.norm_label()
         self.df = self.df.replace('', np.nan).dropna(subset=["text"]).reset_index(drop=True)
         self.df["text"] = self.df["text"].apply(self.tweet_w2v)
         print("Done")
@@ -82,8 +86,9 @@ class DataProcessor:
 
 if __name__ == '__main__':
     data_processor = DataProcessor()
-    data_processor.apply_glove()
+    data_processor.apply_glove(False, 100)
     data_processor.save_df(data_folder / "glove_prepro.h5")
     X_train, X_test, y_train, y_test = data_processor.get_split_df()
+    print(X_train.shape)
     print(f"X_train = {X_train}")
     print(f"y_train = {y_train}")

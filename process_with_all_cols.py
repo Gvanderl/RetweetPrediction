@@ -4,7 +4,7 @@ from dataprocessor import DataProcessor
 from config import *
 
 data_processor = DataProcessor()
-data_processor.apply_glove(False, 100)
+data_processor.apply_glove(False, 1000)
 
 print("shape = ", data_processor.df.shape)
 

@@ -22,7 +22,31 @@ def get_data():
     eval_df = pd.read_hdf(data_folder / "eval.h5")
     train_labels = pd.read_hdf(data_folder / "train_labels.h5")
     eval_labels = pd.read_hdf(data_folder / "eval_labels.h5")
-    return train_df, eval_df, train_labels, eval_labels
+
+    train_df = train_df.to_numpy()
+    eval_df = eval_df.to_numpy()
+    train_labels = train_labels.to_numpy()
+    eval_labels = eval_labels.to_numpy()
+    
+    res_train_df =np.zeros((train_df.shape[0], train_df.shape[1]-1+train_df[0][train_df.shape[1]-1].shape[0]))
+
+    res_train_df[:, 0:train_df.shape[1]-1] = train_df[:, 0:train_df.shape[1]-1]
+    j = train_df.shape[1]-1
+    for i in range(train_df.shape[0]):
+        for x in range(train_df[0][train_df.shape[1]-1].shape[0]):
+            if not np.isnan(train_df[i][j]).any():
+                res_train_df[i][j+x] = train_df[i][j][x]
+    
+    res_eval_df =np.zeros((eval_df.shape[0], eval_df.shape[1]-1+eval_df[0][eval_df.shape[1]-1].shape[0]))
+
+    res_eval_df[:, 0:eval_df.shape[1]-1] = eval_df[:, 0:eval_df.shape[1]-1]
+    j = eval_df.shape[1]-1
+    for i in range(eval_df.shape[0]):
+        for x in range(eval_df[0][eval_df.shape[1]-1].shape[0]):
+            if not np.isnan(eval_df[i][j]).any():
+                res_eval_df[i][j+x] = eval_df[i][j][x]
+                
+    return res_train_df, res_eval_df, train_labels, eval_labels
 
 def add_block(inputs):
     relu = ReLU()(inputs)
@@ -51,7 +75,7 @@ def residual_block(x, downsample, filters, kernel_size = 2):
 
 
 def create_res_net(x, y, num_filters = 16):
-    inputs = Input(shape=(None, x.shape[0], x.shape[1]))
+    inputs = Input(shape=(x.shape[1], 1))
     t = BatchNormalization()(inputs)
     t = Conv1D(kernel_size=2,
                strides=1,
@@ -66,9 +90,9 @@ def create_res_net(x, y, num_filters = 16):
             t = residual_block(t, downsample=(j == 0 and i != 0), filters=num_filters)
         num_filters *= 2
 
-    t = AveragePooling2D(4)(t)
+    #t = AveragePooling2D(4)(t)
     # t = Flatten()(t)
-    outputs = Dense(y.shape[0], activation='softmax')(t)
+    outputs = Dense(y.shape[1], activation='softmax')(t)
 
     model = Model(inputs, outputs)
 
@@ -90,10 +114,21 @@ def kaggle_save(y_pred, eval_df):
 if __name__ == '__main__':
     print("Getting data..")
     train_df, eval_df, train_labels, eval_labels= get_data()
-    print(train_df.shape)
     print("Done")
+    
     print("Getting model..")
     model = create_res_net(train_df, train_labels)
     print("Done")
     model.summary()
+    print("start compiling")
+    model.compile(optimizer="Adam", loss="mse", metrics=["mae", "acc"])
+    print("Done")
+    print("Start fit")
+    model.fit(train_df, train_labels)
+    print("Done")
+    print("Start eval")
+    res = model.evaluate(eval_df)
+    print("done")
+    print(res)
+    #print(res.shape)
 

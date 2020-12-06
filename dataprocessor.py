@@ -52,9 +52,15 @@ class DataProcessor:
         text = re.sub("[^a-zA-Z ]", "", text)
         return text
 
-    def norm_label(self):
-        self.label_max = max(self.df[self.label_col])
+    def norm_label(self, overwrite_max=None):
+        if overwrite_max:
+            self.label_max = overwrite_max
+        else:
+            self.label_max = max(self.df[self.label_col])
         self.df[self.label_col] = self.df[self.label_col] / self.label_max
+
+    def unnorm(self, norm_labels):
+        return norm_labels * self.label_max
 
     def get_split_df(self):
         return scsplit(self.df["text"], self.df[self.label_col], stratify=self.df[self.label_col], train_size=0.7,

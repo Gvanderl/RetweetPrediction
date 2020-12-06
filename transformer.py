@@ -3,7 +3,7 @@ import pandas as pd
 import logging
 from dataprocessor import DataProcessor
 from config import *
-
+from sklearn.metrics import mean_absolute_error
 
 logging.basicConfig(level=logging.INFO)
 transformers_logger = logging.getLogger("transformers")
@@ -34,10 +34,13 @@ model = ClassificationModel(
 )
 
 # Train the model
-model.train_model(train_df)
+model.train_model(train_df, args={"overwrite_output_dir": True})
 
 # Evaluate the model
 result, model_outputs, wrong_predictions = model.eval_model(eval_df)
 
-# Make predictions with the model
-# predictions, raw_outputs = model.predict(["Sam was a Wizard"])
+predictions, raw_outputs = model.predict(eval_df["text"])
+predictions = dp.unnorm(predictions)
+labels = dp.unnorm(eval_df["labels"])
+mae = mean_absolute_error(y_true=labels, y_pred=predictions)
+print("Prediction error:", mae)

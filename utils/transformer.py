@@ -5,6 +5,10 @@ from dataprocessor import DataProcessor
 from config import *
 from sklearn.metrics import mean_absolute_error
 
+"""
+File to run 
+"""
+
 logging.basicConfig(level=logging.INFO)
 transformers_logger = logging.getLogger("transformers")
 transformers_logger.setLevel(logging.WARNING)

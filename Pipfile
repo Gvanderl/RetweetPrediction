@@ -5,20 +5,14 @@ name = "pypi"
 
 [packages]
 sklearn = "*"
-tensorflow-gpu = "*"
 pandas = "*"
 verstack = "*"
 gensim = "*"
 numpy = "*"
-torch = "*"
 simpletransformers = "*"
-pandarallel = "*"
-tables = "*"
-wandb = "*"
 keras = "*"
 matplotlib = "*"
 django = "*"
-deepctr = "*"
 textblob = "*"
 
 [dev-packages]

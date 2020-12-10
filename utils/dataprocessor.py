@@ -114,21 +114,21 @@ class DataProcessor:
         self.replace_timestamp()
         # self.df = self.df[self.df["user_statuses_count"] > 10]
 
-    def get_numerical(self):
-        self.filter_df()
+    def get_numerical(self, filter=True):
+        if filter:
+            self.filter_df()
         to_drop = ["urls", "hashtags", "text", "user_mentions"]
         dummies_cols = ["day_of_week", "hour"]
         self.df = pd.get_dummies(self.df, columns=dummies_cols)
         if self.label_col in self.df.columns:
             to_drop.append(self.label_col)
             y_train = self.df[self.label_col]
-            y_train = np.log1p(y_train.astype(float))
         else:
             y_train = None
         features = self.df.columns.drop(to_drop)
         X_train = self.df[features]
 
-        return np.log1p(X_train.astype(float)), y_train
+        return X_train, y_train
 
 
 if __name__ == '__main__':

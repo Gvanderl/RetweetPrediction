@@ -5,15 +5,17 @@ import os
 import re
 import string as st
 import numpy as np
-from verstack.stratified_continuous_split import scsplit
+from textblob import TextBlob
 
 
 class DataProcessor:
-    def __init__(self):
+    def __init__(self, nrows=None):
         self.df = None
         self.w2v_model = None
         self.label_col = "retweet_count"
         self.label_max = None
+        self.drop = False
+        self.nrows = nrows
 
     def get_glove_model(self):
         if not glove_path.exists():
@@ -27,7 +29,8 @@ class DataProcessor:
 
     def clean_df(self):
         self.df["text"] = self.df["text"].apply(self.clean)
-        self.df = self.df.replace('', np.nan).dropna(subset=["text"]).reset_index(drop=True)
+        if self.drop:
+            self.df = self.df.replace('', np.nan).dropna(subset=["text"]).reset_index(drop=True)
 
     def clean(self, string):
         emoji_pattern = re.compile("["
@@ -63,22 +66,25 @@ class DataProcessor:
         return norm_labels * self.label_max
 
     def get_split_df(self):
+        from verstack.stratified_continuous_split import scsplit
         return scsplit(self.df["text"], self.df[self.label_col], stratify=self.df[self.label_col], train_size=0.7,
                        test_size=0.3)
 
     def get_split_df_with_all_cols(self):
+        from verstack.stratified_continuous_split import scsplit
         return scsplit(self.df, self.df[self.label_col], stratify=self.df[self.label_col], train_size=0.7,
                        test_size=0.3)
 
-    def apply_glove(self, normalize=True, nrows=None):
+    def apply_glove(self, normalize=True):
         print("Loading Glove ...")
         self.get_glove_model()
         print("Done")
         print("Processing data ...")
-        self.load_csv(train_path, nrows)
         self.clean_df()
-        if normalize: self.norm_label()
-        self.df = self.df.replace('', np.nan).dropna(subset=["text"]).reset_index(drop=True)
+        if normalize:
+            self.norm_label()
+        if self.drop:
+            self.df = self.df.replace('', np.nan).dropna(subset=["text"]).reset_index(drop=True)
         self.df["text"] = self.df["text"].apply(self.tweet_w2v)
         print("Done")
 
@@ -86,13 +92,49 @@ class DataProcessor:
         self.df.to_hdf(path, key='df', mode='w')
         print(f"Dataframe saved to {path}")
 
-    def load_csv(self, path, nrows=None):
-        self.df = pd.read_csv(path, nrows=nrows)
+    def load_csv(self, path=train_path):
+        self.df = pd.read_csv(path, nrows=self.nrows, index_col="id")
+        self.df["user_verified"] = self.df["user_verified"].astype(bool)
+
+    def replace_timestamp(self):
+        self.df["day_of_week"] = pd.to_datetime(self.df["timestamp"]).dt.weekday
+        self.df["hour"] = pd.to_datetime(self.df["timestamp"]).dt.hour
+        self.df.drop("timestamp", 1, inplace=True)
+
+    def add_sentiment(self):
+        print("Doing sentiment analysis...")
+        self.df['positivity'] = self.df["text"].apply(lambda x: max(TextBlob(x).sentiment.polarity, 0))
+        self.df['negativity'] = self.df["text"].apply(lambda x: -min(TextBlob(x).sentiment.polarity, 0))
+        self.df['subjectivity'] = self.df["text"].apply(lambda x: TextBlob(x).sentiment.subjectivity)
+        print("Done")
+
+    def filter_df(self):
+        self.clean_df()
+        self.add_sentiment()
+        self.replace_timestamp()
+        # self.df = self.df[self.df["user_statuses_count"] > 10]
+
+    def get_numerical(self):
+        self.filter_df()
+        to_drop = ["urls", "hashtags", "text", "user_mentions"]
+        dummies_cols = ["day_of_week", "hour"]
+        self.df = pd.get_dummies(self.df, columns=dummies_cols)
+        if self.label_col in self.df.columns:
+            to_drop.append(self.label_col)
+            y_train = self.df[self.label_col]
+            y_train = np.log1p(y_train.astype(float))
+        else:
+            y_train = None
+        features = self.df.columns.drop(to_drop)
+        X_train = self.df[features]
+
+        return np.log1p(X_train.astype(float)), y_train
 
 
 if __name__ == '__main__':
     data_processor = DataProcessor()
-    data_processor.apply_glove(False, 100)
+    data_processor.load_csv()
+    data_processor.apply_glove(False)
     data_processor.save_df(data_folder / "glove_prepro.h5")
     X_train, X_test, y_train, y_test = data_processor.get_split_df()
     print(X_train.shape)

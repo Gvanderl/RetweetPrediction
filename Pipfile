@@ -14,6 +14,12 @@ torch = "*"
 simpletransformers = "*"
 pandarallel = "*"
 tables = "*"
+wandb = "*"
+keras = "*"
+matplotlib = "*"
+django = "*"
+deepctr = "*"
+textblob = "*"
 
 [dev-packages]
 

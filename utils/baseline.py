@@ -7,7 +7,7 @@ from sklearn.metrics import mean_absolute_error
 from verstack.stratified_continuous_split import scsplit # pip install verstack
 
 # Load the training data
-train_data = pd.read_csv("data/train.csv")
+train_data = pd.read_csv("../data/train.csv")
 
 # Here we split our training data into trainig and testing set. This way we can estimate the evaluation of our model without uploading to Kaggle and avoid overfitting over our evaluation dataset.
 # scsplit method is used in order to split our regression data in a stratisfied way and keep a similar distribution of retweet counts between the two sets
@@ -37,7 +37,7 @@ print("Prediction error:", mean_absolute_error(y_true=y_test, y_pred=y_pred))
 # Once we finalized our features and model we can train it using the whole training set and then produce prediction for the evaluating dataset
 ###################################
 # Load the evaluation data
-eval_data = pd.read_csv("data/evaluation.csv")
+eval_data = pd.read_csv("../data/evaluation.csv")
 # Transform our data into tfidf vectors
 vectorizer = TfidfVectorizer(max_features=100, stop_words='english')
 y_train = train_data['retweet_count']

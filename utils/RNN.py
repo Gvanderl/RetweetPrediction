@@ -105,7 +105,7 @@ def create_res_net(x, y, num_filters = 16):
     return model
 
 def kaggle_save(y_pred, eval_df):
-    with open("gbr_predictions.txt", 'w') as f:
+    with open("../gbr_predictions.txt", 'w') as f:
         writer = csv.writer(f)
         writer.writerow(["TweetID", "NoRetweets"])
         for index, prediction in enumerate(y_pred):

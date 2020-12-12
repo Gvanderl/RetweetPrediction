@@ -64,7 +64,7 @@ To get a local copy up and running follow these simple steps.
 ### Prerequisites
 
 You will need to have python 3.7 installed on your machine, as well as the pipenv virtual environment manager, [here](https://pipenv-fork.readthedocs.io/en/latest/install.html) are the installation instructions. If you want to use your own, you can find the requirements in the Pipfile
-You can [download](https://www.kaggle.com/c/covid19-retweet-prediction-challenge-2020/data) the dataset to train the model.
+You can download the dataset [here](https://www.kaggle.com/c/covid19-retweet-prediction-challenge-2020/data) to train the model.
 
 To run inference, you can [download the model weights](https://drive.google.com/drive/folders/13AlHMsZZTNPL5K1wL3N-UgiO90Z69dib?usp=sharing). By default, they should be placed in the project directory in a folder named saved_models.
 ### Installation
@@ -96,8 +96,7 @@ The inference results should be saved in ./outputs if you left the default in [c
 <!-- LICENSE -->
 ## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
-
+Distributed under the MIT License.
 
 
 <!-- CONTACT -->

@@ -8,26 +8,24 @@ from keras.layers import Dense, Activation, Input, Add, AveragePooling2D
 from keras.layers import Conv1D, Conv2D, ReLU, BatchNormalization, Flatten
 from keras.models import Model
 from tensorflow import Tensor
+from sklearn.metrics import mean_absolute_error
 
 batch_size = 128
-epochs = 10
-n = 3
-depth = n*6+2
-model_name = "ResNet-%d" %depth + time.strftime("%Y%m%d-%H%M%S")
+epochs = 5
+model_name = "ResNet-" + time.strftime("%Y%m%d-%H%M%S")
 lr = 1e-5
-num_classes = 4
 
 def get_data():
     train_df = pd.read_hdf(data_folder / "train.h5")
-    eval_df = pd.read_hdf(data_folder / "eval.h5")
+    eval_df = pd.read_hdf(data_folder / "test.h5")
     train_labels = pd.read_hdf(data_folder / "train_labels.h5")
-    eval_labels = pd.read_hdf(data_folder / "eval_labels.h5")
+    eval_labels = pd.read_hdf(data_folder / "test_labels.h5")
 
     train_df = train_df.to_numpy()
     eval_df = eval_df.to_numpy()
     train_labels = train_labels.to_numpy()
     eval_labels = eval_labels.to_numpy()
-    
+   
     res_train_df =np.zeros((train_df.shape[0], train_df.shape[1]-1+train_df[0][train_df.shape[1]-1].shape[0]))
 
     res_train_df[:, 0:train_df.shape[1]-1] = train_df[:, 0:train_df.shape[1]-1]
@@ -37,6 +35,7 @@ def get_data():
             if not np.isnan(train_df[i][j]).any():
                 res_train_df[i][j+x] = train_df[i][j][x]
     
+
     res_eval_df =np.zeros((eval_df.shape[0], eval_df.shape[1]-1+eval_df[0][eval_df.shape[1]-1].shape[0]))
 
     res_eval_df[:, 0:eval_df.shape[1]-1] = eval_df[:, 0:eval_df.shape[1]-1]
@@ -45,7 +44,7 @@ def get_data():
         for x in range(eval_df[0][eval_df.shape[1]-1].shape[0]):
             if not np.isnan(eval_df[i][j]).any():
                 res_eval_df[i][j+x] = eval_df[i][j][x]
-                
+
     return res_train_df, res_eval_df, train_labels, eval_labels
 
 def add_block(inputs):
@@ -91,8 +90,8 @@ def create_res_net(x, y, num_filters = 16):
         num_filters *= 2
 
     #t = AveragePooling2D(4)(t)
-    # t = Flatten()(t)
-    outputs = Dense(y.shape[1], activation='softmax')(t)
+    t = Flatten()(t)
+    outputs = Dense(y.shape[1])(t)
 
     model = Model(inputs, outputs)
 
@@ -105,11 +104,14 @@ def create_res_net(x, y, num_filters = 16):
     return model
 
 def kaggle_save(y_pred, eval_df):
-    with open("../gbr_predictions.txt", 'w') as f:
+    with open("gbr_predictions.txt", 'w') as f:
         writer = csv.writer(f)
         writer.writerow(["TweetID", "NoRetweets"])
+        i = 0
         for index, prediction in enumerate(y_pred):
-            writer.writerow([str(eval_df['id'].iloc[index]), str(int(prediction))])
+            #writer.writerow([str(eval_df['id'].iloc[index]), str(int(prediction))])
+            writer.writerow([str(index), str(int(prediction))])
+            i+=1
 
 if __name__ == '__main__':
     print("Getting data..")
@@ -124,11 +126,16 @@ if __name__ == '__main__':
     model.compile(optimizer="Adam", loss="mse", metrics=["mae", "acc"])
     print("Done")
     print("Start fit")
-    model.fit(train_df, train_labels)
+    model.fit(train_df, train_labels, epochs=epochs, batch_size=batch_size)
     print("Done")
     print("Start eval")
-    res = model.evaluate(eval_df)
+    res = model.predict(eval_df)
     print("done")
     print(res)
-    #print(res.shape)
+    print(eval_df.shape)
+    print(res.shape)
+    """print(res[0])
+    kaggle_save(res, None)
+    print("saved")"""
+    print("Prediction error:", mean_absolute_error(y_true=eval_labels, y_pred=res))
 
